@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatwoot - AI Customer Screening</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    overflow: hidden;
+    background: #f7f9fc;
+    color: #17345c;
+}
+
+/* MAIN LAYOUT */
+.app {
+    display: flex;
+    height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 320px;
+    background: #06294d;
+    color: white;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 28px;
+}
+
+.logo-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #168df5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.menu-item {
+    padding: 15px;
+    border-radius: 9px;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.menu-item:hover,
+.menu-item.active {
+    background: #087ff0;
+}
+
+.channels {
+    margin-top: 28px;
+    border-top: 1px solid #41617e;
+    padding-top: 20px;
+}
+
+.channels h3 {
+    margin-bottom: 15px;
+}
+
+.channel {
+    padding: 9px 0;
+    font-size: 15px;
+}
+
+.online-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #20c968;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.agent {
+    margin-top: auto;
+    border-top: 1px solid #41617e;
+    padding-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.agent-avatar {
+    width: 50px;
+    height: 50px;
+    background: #22c55e;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* MAIN AREA */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* TOPBAR */
+.topbar {
+    height: 82px;
+    background: white;
+    border-bottom: 1px solid #dce4ed;
+    display: flex;
+    align-items: center;
+    padding: 15px 22px;
+}
+
+.search {
+    width: 540px;
+    height: 50px;
+    border: 1px solid #d5dee9;
+    border-radius: 10px;
+    padding: 0 18px;
+    font-size: 16px;
+    outline: none;
+}
+
+.top-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    font-weight: bold;
+}
+
+.notification {
+    font-size: 25px;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-avatar {
+    width: 50px;
+    height: 50px;
+    background: #25c35a;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+/* CONTENT */
+.content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+}
+
+/* INBOX */
+.inbox {
+    width: 400px;
+    background: white;
+    border-right: 1px solid #dce4ed;
+    overflow-y: auto;
+}
+
+.inbox-header {
+    padding: 18px;
+    border-bottom: 1px solid #e1e7ee;
+}
+
+.inbox-header h2 {
+    margin-bottom: 18px;
+}
+
+.tabs {
+    display: flex;
+    gap: 35px;
+    color: #62748a;
+}
+
+.tabs span:first-child {
+    color: #087ff0;
+    font-weight: bold;
+    border-bottom: 3px solid #087ff0;
+    padding-bottom: 12px;
+}
+
+.conversation {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 18px;
+    border-bottom: 1px solid #e5eaf0;
+    cursor: pointer;
+}
+
+.conversation:hover,
+.conversation.selected {
+    background: #e9f3ff;
+}
+
+.customer-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #3f51df;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.customer-info {
+    flex: 1;
+}
+
+.customer-name {
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.message-preview {
+    color: #667991;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 210px;
+}
+
+.channel-name {
+    color: #667991;
+    font-size: 13px;
+    margin-top: 8px;
+}
+
+.priority {
+    padding: 5px 9px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.high {
+    background: #ffd9df;
+    color: #d7193f;
+}
+
+.normal {
+    background: #ffe9ae;
+    color: #815900;
+}
+
+.low {
+    background: #c8f3d7;
+    color: #168047;
+}
+
+/* CONVERSATION AREA */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.chat-header {
+    height: 100px;
+    background: white;
+    border-bottom: 1px solid #dce4ed;
+    display: flex;
+    align-items: center;
+    padding: 18px;
+    gap: 15px;
+}
+
+.chat-header h2 {
+    margin-bottom: 7px;
+}
+
+.chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+}
+
+/* AI SCREENING */
+.ai-panel {
+    border: 1px solid #f2aeb9;
+    background: #fff5f7;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+}
+
+.ai-title {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f2c9cf;
+}
+
+.ai-icon {
+    width: 42px;
+    height: 42px;
+    background: #df263f;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.ai-title-text {
+    flex: 1;
+}
+
+.ai-title-text h3 {
+    color: #351b22;
+    margin-bottom: 5px;
+}
+
+.ai-title-text p {
+    color: #5d4a51;
+    font-size: 14px;
+}
+
+.high-priority {
+    background: #df263f;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.ai-details {
+    display: flex;
+}
+
+.ai-box {
+    flex: 1;
+    padding: 18px;
+    border-right: 1px solid #f0d2d6;
+}
+
+.ai-box:last-child {
+    border-right: none;
+}
+
+.ai-label {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.ai-value {
+    font-size: 17px;
+    color: #253f62;
+}
+
+.ai-value.red {
+    color: #d7193f;
+    font-weight: bold;
+}
+
+/* MESSAGES */
+.message-row {
+    display: flex;
+    margin: 20px 0;
+    gap: 12px;
+}
+
+.message-row.agent-message {
+    justify-content: flex-end;
+}
+
+.message {
+    max-width: 520px;
+    padding: 16px;
+    border-radius: 13px;
+    background: #eaf1f8;
+    line-height: 1.6;
+}
+
+.agent-message .message {
+    background: #0785f5;
+    color: white;
+}
+
+.message-info {
+    font-size: 13px;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+/* COMPOSER */
+.composer {
+    background: white;
+    border-top: 1px solid #dce4ed;
+    padding: 18px;
+}
+
+.message-input {
+    width: 100%;
+    height: 120px;
+    border: 1px solid #d5dee9;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 15px;
+    resize: none;
+    outline: none;
+}
+
+.composer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.tools {
+    display: flex;
+    gap: 22px;
+    font-size: 22px;
+}
+
+.send-btn {
+    background: #087ff0;
+    color: white;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 9px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.send-btn:hover {
+    background: #056bd0;
+}
+
+/* RESPONSIVE */
+@media(max-width: 1000px) {
+    .sidebar {
+        width: 220px;
+    }
+
+    .inbox {
+        width: 320px;
+    }
+
+    .search {
+        width: 400px;
+    }
+}
+
+@media(max-width: 750px) {
+    .sidebar {
+        display: none;
+    }
+
+    .inbox {
+        width: 35%;
+    }
+
+    .search {
+        width: 60%;
+    }
+
+    .ai-details {
+        flex-direction: column;
+    }
+
+    .ai-box {
+        border-right: none;
+        border-bottom: 1px solid #f0d2d6;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">●</div>
+            chatwoot
+        </div>
+
+        <div class="menu">
+
+            <div class="menu-item active">
+                💬 &nbsp; Conversations
+            </div>
+
+            <div class="menu-item">
+                👤 &nbsp; Contacts
+            </div>
+
+            <div class="menu-item">
+                👜 &nbsp; Inboxes
+            </div>
+
+            <div class="menu-item">
+                👥 &nbsp; Teams
+            </div>
+
+            <div class="menu-item">
+                📊 &nbsp; Reports
+            </div>
+
+            <div class="menu-item">
+                ⚙️ &nbsp; Settings
+            </div>
+
+        </div>
+
+        <div class="channels">
+
+            <h3>Channels</h3>
+
+            <div class="channel">
+                🌐 <span class="online-dot"></span> Website Chat
+            </div>
+
+            <div class="channel">
+                🟢 <span class="online-dot"></span> WhatsApp
+            </div>
+
+            <div class="channel">
+                ✉️ <span class="online-dot"></span> Email
+            </div>
+
+            <div class="channel">
+                🔵 <span class="online-dot"></span> Facebook
+            </div>
+
+            <div class="channel">
+                📷 <span class="online-dot"></span> Instagram
+            </div>
+
+            <div class="channel">
+                ➤ <span class="online-dot"></span> Telegram
+            </div>
+
+        </div>
+
+        <div class="agent">
+
+            <div class="agent-avatar">G</div>
+
+            <div>
+                <b>GANGASH</b>
+                <br>
+                <span class="online-dot"></span> Online
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <input
+                class="search"
+                type="text"
+                id="search"
+                placeholder="Search conversations, contacts..."
+            >
+
+            <div class="top-right">
+
+                <span>
+                    <span class="online-dot"></span>
+                    Online ▼
+                </span>
+
+                <span class="notification">
+                    🔔
+                </span>
+
+                <div class="profile">
+                    <div class="profile-avatar">G</div>
+                    GANGASH ▼
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+        <div class="content">
+
+            <!-- INBOX -->
+            <section class="inbox">
+
+                <div class="inbox-header">
+
+                    <h2>Inbox</h2>
+
+                    <div class="tabs">
+                        <span>All</span>
+                        <span>Mine</span>
+                        <span>Unassigned</span>
+                    </div>
+
+                </div>
+
+
+                <div id="conversationList">
+
+                    <div class="conversation selected"
+                         data-name="John Doe">
+
+                        <div class="customer-avatar">
+                            JD
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                John Doe
+                            </div>
+
+                            <div class="message-preview">
+                                My payment failed and money was deducted...
+                            </div>
+
+                            <div class="channel-name">
+                                🌐 Web Widget
+                            </div>
+
+                        </div>
+
+                        <div>
+                            <span class="priority high">
+                                High
+                            </span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Priya Sharma">
+
+                        <div class="customer-avatar"
+                             style="background:#20b95a;">
+                            PS
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Priya Sharma
+                            </div>
+
+                            <div class="message-preview">
+                                Can you share the product details?
+                            </div>
+
+                            <div class="channel-name">
+                                🟢 WhatsApp
+                            </div>
+
+                        </div>
+
+                        <span class="priority normal">
+                            Normal
+                        </span>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Ravi Kumar">
+
+                        <div class="customer-avatar">
+                            RK
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Ravi Kumar
+                            </div>
+
+                            <div class="message-preview">
+                                I have a billing issue.
+                            </div>
+
+                            <div class="channel-name">
+                                ✉️ Email
+                            </div>
+
+                        </div>
+
+                        <span class="priority high">
+                            High
+                        </span>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Sneha Patel">
+
+                        <div class="customer-avatar"
+                             style="background:#e833a2;">
+                            SP
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Sneha Patel
+                            </div>
+
+                            <div class="message-preview">
+                                What are the delivery options?
+                            </div>
+
+                            <div class="channel-name">
+                                📷 Instagram
+                            </div>
+
+                        </div>
+
+                        <span class="priority normal">
+                            Normal
+                        </span>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Arjun Mehta">
+
+                        <div class="customer-avatar">
+                            AM
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Arjun Mehta
+                            </div>
+
+                            <div class="message-preview">
+                                Thanks for the support!
+                            </div>
+
+                            <div class="channel-name">
+                                🔵 Facebook
+                            </div>
+
+                        </div>
+
+                        <span class="priority low">
+                            Low
+                        </span>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Neha Singh">
+
+                        <div class="customer-avatar"
+                             style="background:#13aee0;">
+                            NS
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Neha Singh
+                            </div>
+
+                            <div class="message-preview">
+                                I want to return my product.
+                            </div>
+
+                            <div class="channel-name">
+                                ➤ Telegram
+                            </div>
+
+                        </div>
+
+                        <span class="priority normal">
+                            Normal
+                        </span>
+
+                    </div>
+
+
+                    <div class="conversation"
+                         data-name="Tech Solutions">
+
+                        <div class="customer-avatar"
+                             style="background:#6325c9;">
+                            T
+                        </div>
+
+                        <div class="customer-info">
+
+                            <div class="customer-name">
+                                Tech Solutions
+                            </div>
+
+                            <div class="message-preview">
+                                New inquiry from website
+                            </div>
+
+                            <div class="channel-name">
+                                🌐 Web Widget
+                            </div>
+
+                        </div>
+
+                        <span class="priority low">
+                            Low
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- CHAT -->
+            <section class="chat-area">
+
+                <header class="chat-header">
+
+                    <div class="customer-avatar">
+                        JD
+                    </div>
+
+                    <div>
+                        <h2>John Doe</h2>
+                        <span>
+                            <span class="online-dot"></span>
+                            Online
+                        </span>
+                    </div>
+
+                </header>
+
+
+                <div class="chat-body">
+
+                    <!-- AI SCREENING -->
+                    <div class="ai-panel">
+
+                        <div class="ai-title">
+
+                            <div class="ai-icon">
+                                AI
+                            </div>
+
+                            <div class="ai-title-text">
+
+                                <h3>
+                                    AI Customer Screening
+                                </h3>
+
+                                <p>
+                                    This conversation has been automatically
+                                    analyzed and classified based on its content.
+                                </p>
+
+                            </div>
+
+                            <div class="high-priority">
+                                ⚠ High Priority
+                            </div>
+
+                        </div>
+
+
+                        <div class="ai-details">
+
+                            <div class="ai-box">
+
+                                <div class="ai-label">
+                                    🔴 Priority
+                                </div>
+
+                                <div class="ai-value red">
+                                    High
+                                </div>
+
+                            </div>
+
+
+                            <div class="ai-box">
+
+                                <div class="ai-label">
+                                    🎯 Reason
+                                </div>
+
+                                <div class="ai-value">
+
+                                    Payment related issue
+                                    <br><br>
+
+                                    <small>
+                                        (Payment failed / Money deducted)
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="ai-box">
+
+                                <div class="ai-label">
+                                    🕐 Suggested Action
+                                </div>
+
+                                <div class="ai-value">
+
+                                    Immediate attention required
+                                    <br><br>
+
+                                    <small>
+                                        (Respond within 5 minutes)
+                                    </small>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>
